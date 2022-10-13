@@ -1,0 +1,106 @@
+---
+title: "Interactive Penguins Examples"
+output: html_notebook
+runtime: shiny
+---
+
+# Penguins
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(shiny)
+library(tidyverse)
+library(palmerpenguins)
+```
+
+# Categorical Input
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+checkboxGroupInput(
+  inputId = "species",
+  label = "Penguin species:",
+  choices = c("Adelie", "Chinstrap", "Gentoo"),
+  selected = c("Adelie", "Chinstrap", "Gentoo")
+)
+
+renderPlot({
+  penguins %>%
+    filter(species %in% input$species) %>% 
+    ggplot() + 
+      geom_point(
+          mapping = aes(
+            x = bill_length_mm, 
+            y = bill_depth_mm,
+            color = species
+         )
+      ) + 
+      xlim(30, 60) + 
+      ylim(15, 22)
+})
+
+```
+
+# Numerical Input
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+sliderInput(
+  inputId = "sample_size",
+  label = "Sample Size:",
+  min = 0,
+  max = 1,
+  value = 0.1,
+  step = 0.01
+)
+
+renderPlot({
+  penguins %>%
+    sample_frac(size = input$sample_size) %>% 
+    ggplot() + 
+      geom_point(
+          mapping = aes(
+            x = bill_length_mm, 
+            y = bill_depth_mm,
+            color = species
+         )
+      ) + 
+      xlim(30, 60) + 
+      ylim(15, 22)
+})
+
+```
+
+# Multiple Inputs
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+sliderInput(
+  inputId = "sample_size_combined",
+  label = "Sample Size:",
+  min = 0,
+  max = 1,
+  value = 0.1,
+  step = 0.01
+)
+
+checkboxGroupInput(
+  inputId = "species_combined",
+  label = "Penguin species:",
+  choices = c("Adelie", "Chinstrap", "Gentoo"),
+  selected = c("Adelie", "Chinstrap", "Gentoo")
+)
+
+renderPlot({
+  penguins %>%
+    sample_frac(size = input$sample_size_combined) %>% 
+    filter(species %in% input$species_combined) %>% 
+    ggplot() + 
+      geom_point(
+          mapping = aes(
+            x = bill_length_mm, 
+            y = bill_depth_mm,
+            color = species
+         )
+      ) + 
+      xlim(30, 60) + 
+      ylim(15, 22)
+})
+
+```

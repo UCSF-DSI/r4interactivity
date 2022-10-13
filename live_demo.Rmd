@@ -1,0 +1,224 @@
+---
+title: "The What, Why, and How of Interactive Visualizations"
+output: html_notebook
+runtime: shiny
+---
+
+# The What, Why, and How of Interactive Visualizations
+
+## What?
+
+Check out [examples](https://shiny.rstudio.com/gallery/).
+
+## Why?
+
+Benefits
+
+-   Fitting more information into a smaller space (expressive)
+
+-   Letting users adapt data visualization to their needs
+
+-   Facilitating collaboration between data analysts/scientists and less data-savvy people
+
+See [The Surprising Story Behind The Mac's Original Calculator App](https://www.businessinsider.com/macintosh-calculator-2011-10).
+
+![](https://i.insider.com/4ea5b2d869bedd576a000032?width=300&format=jpeg&auto=webp)
+
+## How?
+
+Use [shiny](https://shiny.rstudio.com/tutorial/) (see yaml header).
+
+This example uses the [Palmer Penguins Dataset](https://allisonhorst.github.io/palmerpenguins/).
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(shiny)
+library(tidyverse)
+library(palmerpenguins)
+```
+
+```{r}
+penguins_df <- penguins %>% drop_na()
+penguins_df
+```
+
+### Categorical Input
+
+```{r}
+penguins_df %>% select(species) %>% unique()
+```
+
+```{r}
+penguins_df %>%
+  filter(species == "Chinstrap") %>% 
+  ggplot() + 
+    geom_point(
+        mapping = aes(
+          x = bill_length_mm, 
+          y = bill_depth_mm,
+          color = species
+       )
+    ) + 
+    xlim(30, 60) + 
+    ylim(15, 22)
+```
+
+In this example, we'll use a `checkboxGroupInput` to look at specific species of penguins.
+
+    checkboxGroupInput(
+      inputId = ..., # Think of it as an object name (not visible to users)
+      label = ..., # Title (visible to users)
+      choices = ..., # Options for users to select
+      selected = ... # What's selected by default
+    )
+
+Use `renderPlot(…)` and `input$inputId` to generate your interactive viz.
+
+    renderPlot(...)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+checkboxGroupInput(
+  inputId = "species_selection", # Think of it as an object name (not visible to users)
+  label = "Penguin species:", # Title (visible to users)
+  choices = c("Adelie", "Chinstrap", "Gentoo"), # Options for users to select
+  selected = c("Adelie", "Chinstrap", "Gentoo") # What's selected by default
+)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+renderPlot(
+  penguins_df %>%
+    filter(species == input$species_selection) %>% 
+    ggplot() + 
+      geom_point(
+          mapping = aes(
+            x = bill_length_mm, 
+            y = bill_depth_mm,
+            color = species
+         )
+      )
+)
+```
+
+Other tips
+
+-   Set the `xlim` and `ylim`
+
+### Numerical Variables
+
+In this example, we'll use a `sliderInput` to do a sample of the penguins (`sample_frac`).
+
+```{r}
+penguins_df %>%
+  sample_frac(size = 0.75) %>% 
+  ggplot() + 
+    geom_point(
+        mapping = aes(
+          x = bill_length_mm, 
+          y = bill_depth_mm,
+          color = species
+       )
+    ) + 
+    xlim(30, 60) + 
+    ylim(15, 22)
+```
+
+    sliderInput(
+      inputId = ..., # Think of it as an object name (not visible to users)
+      label = ..., # Title (visible to users)
+      min = ..., # Minimum value on slider
+      max = ..., # Maximum value on slider
+      value = ..., # Default value on slider
+      step = ... # Interval between each tick on the slider
+    )
+
+User `renderPlot(…)` and `input$inputId` to generate your interactive viz.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+sliderInput(
+  inputId = "sample_size", # Think of it as an object name (not visible to users)
+  label = "Sample Size:", # Title (visible to users)
+  min = 0, # Minimum value on slider
+  max = 1, # Maximum value on slider
+  value = 1, # Default value on slider
+  step = 0.01 # Interval between each tick on the slider
+)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+renderPlot(
+  penguins_df %>%
+    sample_frac(size = input$sample_size) %>% 
+    ggplot() + 
+      geom_point(
+          mapping = aes(
+            x = bill_length_mm, 
+            y = bill_depth_mm,
+            color = species
+         )
+      ) + 
+      xlim(30, 60) + 
+      ylim(15, 22)
+)
+```
+
+### Multiple Inputs
+
+Make sure you have unique `InputId`s!
+
+```{r}
+penguins_df %>%
+  filter(species == "Adelie") %>% 
+  sample_frac(size = 0.5) %>% 
+  ggplot() + 
+    geom_point(
+        mapping = aes(
+          x = bill_length_mm, 
+          y = bill_depth_mm,
+          color = species
+       )
+    ) + 
+    xlim(30, 60) + 
+    ylim(15, 22)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+checkboxGroupInput(
+  inputId = "species_selection_mixed", # Think of it as an object name (not visible to users)
+  label = "Penguin species:", # Title (visible to users)
+  choices = c("Adelie", "Chinstrap", "Gentoo"), # Options for users to select
+  selected = c("Adelie", "Chinstrap", "Gentoo") # What's selected by default
+)
+
+sliderInput(
+  inputId = "sample_size_mixed", # Think of it as an object name (not visible to users)
+  label = "Sample Size:", # Title (visible to users)
+  min = 0, # Minimum value on slider
+  max = 1, # Maximum value on slider
+  value = 1, # Default value on slider
+  step = 0.01 # Interval between each tick on the slider
+)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+renderPlot(
+  penguins_df %>%
+    filter(species == input$species_selection) %>% 
+    sample_frac(size = input$sample_size) %>% 
+    ggplot() + 
+      geom_point(
+          mapping = aes(
+            x = bill_length_mm, 
+            y = bill_depth_mm,
+            color = species
+         )
+      ) + 
+      xlim(30, 60) + 
+      ylim(15, 22)
+)
+```
